@@ -25,7 +25,6 @@
 		B0403CF22AD934B600137C09 /* CompatibilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CF12AD934B600137C09 /* CompatibilityView.swift */; };
 		B0403CF42AD9381D00137C09 /* SDKsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CF32AD9381D00137C09 /* SDKsView.swift */; };
 		B0403CF62AD9849E00137C09 /* CompilersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CF52AD9849E00137C09 /* CompilersView.swift */; };
-		B0403CF82AD991F800137C09 /* UnselectedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CF72AD991F800137C09 /* UnselectedView.swift */; };
 		B0403CFA2AD9942A00137C09 /* NotInstalledStateButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CF92AD9942A00137C09 /* NotInstalledStateButtons.swift */; };
 		B0403CFC2AD9A6BF00137C09 /* InstalledStateButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CFB2AD9A6BF00137C09 /* InstalledStateButtons.swift */; };
 		B0403CFE2ADA712C00137C09 /* InfoPaneControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CFD2ADA712C00137C09 /* InfoPaneControls.swift */; };
@@ -204,7 +203,6 @@
 		B0403CF12AD934B600137C09 /* CompatibilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityView.swift; sourceTree = "<group>"; };
 		B0403CF32AD9381D00137C09 /* SDKsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKsView.swift; sourceTree = "<group>"; };
 		B0403CF52AD9849E00137C09 /* CompilersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompilersView.swift; sourceTree = "<group>"; };
-		B0403CF72AD991F800137C09 /* UnselectedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnselectedView.swift; sourceTree = "<group>"; };
 		B0403CF92AD9942A00137C09 /* NotInstalledStateButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotInstalledStateButtons.swift; sourceTree = "<group>"; };
 		B0403CFB2AD9A6BF00137C09 /* InstalledStateButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledStateButtons.swift; sourceTree = "<group>"; };
 		B0403CFD2ADA712C00137C09 /* InfoPaneControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoPaneControls.swift; sourceTree = "<group>"; };
@@ -631,7 +629,6 @@
 				B0403CF12AD934B600137C09 /* CompatibilityView.swift */,
 				CAFBDC67259A308B003DCC5A /* InfoPane.swift */,
 				B0403CFD2ADA712C00137C09 /* InfoPaneControls.swift */,
-				B0403CF72AD991F800137C09 /* UnselectedView.swift */,
 				B0403CF92AD9942A00137C09 /* NotInstalledStateButtons.swift */,
 				B0403CFB2AD9A6BF00137C09 /* InstalledStateButtons.swift */,
 				E8E98A9525D863D700EC89A0 /* InstallationStepDetailView.swift */,
@@ -944,7 +941,6 @@
 				CAC281CD259F97FA00B8AB0B /* ObservingProgressIndicator.swift in Sources */,
 				B0C6AD0B2AD9178E00E64698 /* IdenticalBuildView.swift in Sources */,
 				CAFBDC68259A308B003DCC5A /* InfoPane.swift in Sources */,
-				B0403CF82AD991F800137C09 /* UnselectedView.swift in Sources */,
 				E87AB3C52939B65E00D72F43 /* Hardware.swift in Sources */,
 				CAA1CB4D255A5CFD003FD669 /* SignInPhoneListView.swift in Sources */,
 				CAFBDC6C259A3098003DCC5A /* View+Conditional.swift in Sources */,

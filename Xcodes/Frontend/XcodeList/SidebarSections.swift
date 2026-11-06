@@ -159,6 +159,48 @@ private struct SidebarDetail<Actions: View>: View {
     }
 }
 
+/// The detail pane's empty state, the same for every section.
+///
+/// Everything has a fixed size: the icon sits in a box of one height (SF Symbols have different heights), and the
+/// description always keeps room for two lines. So the title and text stay at the same place when you switch modes.
+/// `ContentUnavailableView` centers its content by its real height, which moved it by a pixel or two.
+struct SidebarPlaceholder: View {
+    let mode: SidebarMode
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(symbol: mode.systemImage)
+                .font(.system(size: 40, weight: .regular))
+                .foregroundStyle(.tertiary)
+                .frame(width: 64, height: 52)
+            title
+                .font(.title2.weight(.semibold))
+                .lineLimit(1)
+            Text(verbatim: description)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2, reservesSpace: true)
+        }
+        .frame(width: 320)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var title: some View {
+        switch mode {
+        case .xcodes: Text("NoXcodeSelected")
+        case .platforms: Text(verbatim: "No Platform Selected")
+        }
+    }
+
+    private var description: String {
+        switch mode {
+        case .xcodes: return "Select an Xcode version in the sidebar to see its details."
+        case .platforms: return "Select an installed simulator runtime to see its details."
+        }
+    }
+}
+
 // MARK: - Platforms
 
 /// One installed runtime disk image, with the entry from Apple's list of downloadable runtimes that names it.
