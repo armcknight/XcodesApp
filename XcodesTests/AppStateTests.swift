@@ -530,65 +530,6 @@ class AppStateTests: XCTestCase {
         XCTAssertNil(subject.runtimeTaskIDs[runtime.identifier])
     }
 
-    func test_ConfirmDeleteRuntime_OldTaskDoesNotClearReplacementTask() async throws {
-        let runtime = try Self.downloadableRuntime()
-        let installedRuntime = CoreSimulatorImage(
-            uuid: "runtime-uuid",
-            path: ["relative": "/Library/Developer/CoreSimulator/Images/runtime.dmg"],
-            runtimeInfo: CoreSimulatorRuntimeInfo(build: runtime.simulatorVersion.buildUpdate)
-        )
-        let deletedIdentifiers = TestLockedBox<[String]>([])
-        let continuations = TestLockedBox<[CheckedContinuation<ProcessOutput, Error>]>([])
-        subject = AppState(
-            runtimeService: Self.runtimeService { identifier in
-                deletedIdentifiers.withValue { $0.append(identifier) }
-                return try await withCheckedThrowingContinuation { continuation in
-                    continuations.withValue { $0.append(continuation) }
-                }
-            }
-        )
-        subject.installedRuntimes = [installedRuntime]
-
-        subject.confirmDeleteRuntime(runtime: runtime)
-        for _ in 0..<100 where continuations.read({ $0.count }) < 1 {
-            await Task.yield()
-        }
-        let firstTask = try XCTUnwrap(subject.deleteRuntimeTask)
-        XCTAssertEqual(deletedIdentifiers.read { $0 }, [installedRuntime.uuid])
-
-        subject.confirmDeleteRuntime(runtime: runtime)
-        for _ in 0..<100 where continuations.read({ $0.count }) < 2 {
-            await Task.yield()
-        }
-        let replacementTask = try XCTUnwrap(subject.deleteRuntimeTask)
-        XCTAssertEqual(deletedIdentifiers.read { $0 }, [installedRuntime.uuid, installedRuntime.uuid])
-
-        continuations.read { $0[0] }.resume(returning: ProcessOutput(status: 0, out: "", err: ""))
-        await firstTask.value
-        XCTAssertNotNil(subject.deleteRuntimeTask)
-
-        continuations.read { $0[1] }.resume(returning: ProcessOutput(status: 0, out: "", err: ""))
-        await replacementTask.value
-        XCTAssertNil(subject.deleteRuntimeTask)
-        XCTAssertNil(subject.deleteRuntimeTaskID)
-    }
-
-    func test_ConfirmDeleteRuntime_PresentsPreferenceAlertOnError() async throws {
-        let runtime = try Self.downloadableRuntime()
-
-        subject.confirmDeleteRuntime(runtime: runtime)
-        let task = try XCTUnwrap(subject.deleteRuntimeTask)
-        await task.value
-
-        guard case let .generic(title, message) = subject.presentedPreferenceAlert else {
-            return XCTFail("Expected generic preference alert")
-        }
-        XCTAssertEqual(title, "Error")
-        XCTAssertEqual(message, "No simulator found with \(runtime.identifier)")
-        XCTAssertNil(subject.deleteRuntimeTask)
-        XCTAssertNil(subject.deleteRuntimeTaskID)
-    }
-
     func test_InstallWithoutLogin_OldTaskDoesNotClearReplacementTask() async throws {
         let version = Version("0.0.0")!
         let availableXcode = AvailableXcode(

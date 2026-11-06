@@ -90,7 +90,6 @@ class AppState: ObservableObject {
     private var authenticationTaskID: UUID?
     @Published var xcodeBeingConfirmedForUninstallation: Xcode?
     @Published var presentedAlert: XcodesAlert?
-    @Published var presentedPreferenceAlert: XcodesPreferencesAlert?
     @Published var helperInstallState: HelperInstallState = .notInstalled
     /// Whether the user is being prepared for the helper installation alert with an explanation.
     /// This closure will be performed after the user chooses whether or not to proceed.
@@ -188,8 +187,6 @@ class AppState: ObservableObject {
     internal var installationTaskIDs: [XcodeID: UUID] = [:]
     internal var runtimeTasks: [String: Task<Void, Never>] = [:]
     internal var runtimeTaskIDs: [String: UUID] = [:]
-    internal var deleteRuntimeTask: Task<Void, Never>?
-    internal var deleteRuntimeTaskID: UUID?
     internal var helperInstallTask: Task<Void, Never>?
     internal var helperInstallTaskID: UUID?
     internal var postInstallTask: Task<Void, Never>?

@@ -9,23 +9,38 @@
 import SwiftUI
 import XcodesKit
 
+/// The SF Symbols for platforms, devices and the sidebar sections.
+enum SystemImage: String {
+    case xcode = "hammer"
+    case platforms = "square.3.layers.3d"
+    case runtime = "cpu"
+    case iPhone = "iphone"
+    case watch = "applewatch"
+    case tv = "appletv"
+    case visionPro = "visionpro"
+    case mac = "macwindow"
+}
+
+extension Image {
+    init(symbol: SystemImage) {
+        self.init(systemName: symbol.rawValue)
+    }
+}
+
+extension DownloadableRuntime.Platform {
+    var systemImage: SystemImage {
+        switch self {
+        case .iOS: return .iPhone
+        case .macOS: return .mac
+        case .watchOS: return .watch
+        case .tvOS: return .tv
+        case .visionOS: return .visionPro
+        }
+    }
+}
+
 extension DownloadableRuntime {
     func icon() -> Image {
-        switch self.platform {
-        case .iOS:
-            return Image(systemName: "iphone")
-        case .macOS:
-            return Image(systemName: "macwindow")
-        case .watchOS:
-            return Image(systemName: "applewatch")
-        case .tvOS:
-            return Image(systemName: "appletv")
-        case .visionOS:
-            if #available(macOS 14, *) {
-                return Image(systemName: "visionpro")
-            } else {
-                return Image(systemName: "eyeglasses")
-            }
-        }
+        Image(symbol: platform.systemImage)
     }
 }
