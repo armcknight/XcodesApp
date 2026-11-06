@@ -26,6 +26,7 @@ XcodesApp is now part of the `XcodesOrg` - [read more here](nextstep.md)
 - Support installing Platforms/Runtimes
 - See and delete installed Platforms/Runtimes in the sidebar
 - See and delete simulators in the sidebar, including simulators whose runtime is no longer installed
+- See and delete old device support folders in the sidebar
 - Support installing Apple Silicon variants
 
 ## Platforms/Runtimes
@@ -38,6 +39,10 @@ XcodesApp is now part of the `XcodesOrg` - [read more here](nextstep.md)
 ## Simulators
 
 The Simulators section of the sidebar (⌘3) lists your simulators by runtime, with the disk space each one uses. Simulators whose runtime is no longer installed are listed first, as "Unavailable", so you can delete them all at once. When you delete a runtime in the Platforms section, you can also delete its simulators.
+
+## Device Support
+
+Xcode copies a device support folder to `~/Library/Developer/Xcode/*DeviceSupport` for each OS version of each device you debug on. The Device Support section of the sidebar (⌘4) lists them by device, marks the newest folder of each device, and can delete all the older ones at once.
 
 ## Apple Silicon Variants
 

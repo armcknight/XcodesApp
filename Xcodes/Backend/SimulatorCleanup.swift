@@ -2,8 +2,9 @@
 //  SimulatorCleanup.swift
 //  Xcodes
 //
-//  Lists simulators and installed simulator runtimes with their sizes, and deletes the simulators the user
-//  selects. Xcodes can delete simulator runtimes, but a deleted runtime leaves its simulators on disk.
+//  Lists simulators and device support folders with their sizes, and deletes the ones the user selects.
+//  Xcodes can delete simulator runtimes, but a deleted runtime leaves its simulators on disk, and device
+//  support folders pile up for every iOS version a device ever ran.
 //
 
 import Foundation
@@ -38,6 +39,27 @@ struct SimulatorDevice: Identifiable, Hashable, Sendable {
     var platform: DevicePlatform? { SimulatorCleanup.platform(forRuntimeIdentifier: runtimeIdentifier) }
 }
 
+struct DeviceSupportFolder: Identifiable, Hashable, Sendable {
+    var id: URL { url }
+
+    let url: URL
+    let platform: DevicePlatform
+    /// `iPhone18,4`, or nil for an old folder that has only a version
+    let model: String?
+    /// `[26, 5]`
+    let versionComponents: [Int]
+    let build: String
+    var sizeBytes: Int64?
+    /// The newest folder for its platform and model. Xcode needs it to debug that device.
+    var isNewestForModel = false
+
+    var name: String { url.lastPathComponent }
+    /// `26.5`
+    var version: String { versionComponents.map(String.init).joined(separator: ".") }
+    /// `iPhone18,4 (iOS)`
+    var groupName: String { "\(model ?? platform.name) (\(platform.name))" }
+}
+
 /// An installed runtime disk image, from `xcrun simctl runtime list -j`.
 struct InstalledRuntimeInfo: Sendable {
     /// `com.apple.CoreSimulator.SimRuntime.iOS-26-1`, which simulators refer to, or nil when `simctl` leaves it out
@@ -48,9 +70,9 @@ struct InstalledRuntimeInfo: Sendable {
 
 /// What `SimulatorCleanupStore` reports to the user, with the messages of the failed steps.
 enum SimulatorCleanupFailure: Equatable {
-    /// `simctl` could not list the simulators or runtimes.
+    /// `simctl` could not list the simulators or runtimes, or a device support folder could not be read.
     case load(String)
-    /// Some of the selected simulators could not be deleted.
+    /// Some of the selected simulators or device support folders could not be deleted.
     case delete(String)
 }
 
@@ -68,8 +90,8 @@ enum SimulatorCleanupError: LocalizedError {
     }
 }
 
-/// A platform as runtime identifiers spell it. A platform that Xcodes does not know yet keeps the name from the
-/// identifier, so it still shows.
+/// A platform as runtime identifiers and device support folder names spell it. A platform that Xcodes does not
+/// know yet keeps the name from the identifier or folder, so it still shows.
 enum DevicePlatform: Hashable, Sendable {
     case known(DownloadableRuntime.Platform)
     case unknown(String)
@@ -86,7 +108,7 @@ enum DevicePlatform: Hashable, Sendable {
         }
     }
 
-    /// `iOS`, or the name from the identifier for an unknown platform
+    /// `iOS`, or the name from the identifier or folder for an unknown platform
     var name: String {
         switch self {
         case let .known(platform): return platform.shortName
@@ -97,7 +119,7 @@ enum DevicePlatform: Hashable, Sendable {
 
 // MARK: - Service
 
-/// The commands that `SimulatorCleanupStore` uses. Tests replace them.
+/// The commands and folders that `SimulatorCleanupStore` uses. Tests replace them.
 struct SimulatorCleanupService: Sendable {
     /// The output of `xcrun simctl list devices -j`
     var listDevicesOutput: @Sendable () async throws -> String
@@ -107,6 +129,8 @@ struct SimulatorCleanupService: Sendable {
     var deleteSimulator: @Sendable (_ udid: String) async throws -> Void
     /// The allocated size of a file or folder, from `du -sk`.
     var diskUsage: @Sendable (URL) async throws -> Int64
+    /// ~/Library/Developer/Xcode, which has the `* DeviceSupport` folders
+    var xcodeFolder: URL
 
     init(
         listDevicesOutput: @escaping @Sendable () async throws -> String = {
@@ -120,12 +144,14 @@ struct SimulatorCleanupService: Sendable {
         },
         diskUsage: @escaping @Sendable (URL) async throws -> Int64 = { url in
             try await SimulatorCleanup.diskUsage(url)
-        }
+        },
+        xcodeFolder: URL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Developer/Xcode")
     ) {
         self.listDevicesOutput = listDevicesOutput
         self.listRuntimesOutput = listRuntimesOutput
         self.deleteSimulator = deleteSimulator
         self.diskUsage = diskUsage
+        self.xcodeFolder = xcodeFolder
     }
 }
 
@@ -199,7 +225,67 @@ enum SimulatorCleanup {
         }
     }
 
+    /// The folders in ~/Library/Developer/Xcode/*DeviceSupport, with their sizes. The newest folder for each model is marked.
+    static func loadDeviceSupport(using service: SimulatorCleanupService) async throws -> [DeviceSupportFolder] {
+        let xcodeFolder = service.xcodeFolder
+        let fileManager = FileManager.default
+        let suffix = " DeviceSupport"
+        var folders: [DeviceSupportFolder] = []
+
+        let platformFolders: [URL]
+        do {
+            platformFolders = try fileManager.contentsOfDirectory(at: xcodeFolder, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        } catch CocoaError.fileReadNoSuchFile {
+            // Xcode has never been run, so there is no device support
+            return []
+        }
+
+        for platformFolder in platformFolders where platformFolder.lastPathComponent.hasSuffix(suffix) {
+            let platform = DevicePlatform(name: String(platformFolder.lastPathComponent.dropLast(suffix.count)))
+            let children = try fileManager.contentsOfDirectory(at: platformFolder, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])
+            for child in children {
+                guard let isDirectory = try child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory,
+                      isDirectory,
+                      let parsed = parseDeviceSupportName(child.lastPathComponent)
+                else { continue }
+                folders.append(DeviceSupportFolder(url: child, platform: platform, model: parsed.model, versionComponents: parsed.versionComponents, build: parsed.build))
+            }
+        }
+
+        // mark the newest folder of each platform and model
+        let groups = Dictionary(grouping: folders.indices) { folders[$0].groupName }
+        for indices in groups.values {
+            if let newest = indices.max(by: { isOlder(folders[$0], than: folders[$1]) }) {
+                folders[newest].isNewestForModel = true
+            }
+        }
+
+        for (index, size) in await sizes(of: folders.indices.map { ($0, folders[$0].url) }, using: service) {
+            folders[index].sizeBytes = size
+        }
+        return folders.sorted { lhs, rhs in
+            lhs.groupName != rhs.groupName ? lhs.groupName < rhs.groupName : isOlder(rhs, than: lhs) // newest first
+        }
+    }
+
+    /// Deletes the folder at once. It does not go to the Trash, because the point is to free the space.
+    static func delete(_ folder: DeviceSupportFolder) throws {
+        try FileManager.default.removeItem(at: folder.url)
+    }
+
     // MARK: Helpers
+
+    /// A folder name such as `iPhone18,4 26.5 (23F77)`, `16.4 (20E247) arm64e` or `26.5 (23F77)`.
+    static func parseDeviceSupportName(_ name: String) -> (model: String?, versionComponents: [Int], build: String)? {
+        guard let open = name.range(of: " ("), let close = name[open.upperBound...].firstIndex(of: ")") else { return nil }
+        let words = name[..<open.lowerBound].split(separator: " ")
+        guard let version = words.last else { return nil }
+        let parts = version.split(separator: ".")
+        let components = parts.compactMap { Int($0) }
+        guard !components.isEmpty, components.count == parts.count else { return nil }
+        let model = words.count > 1 ? words.dropLast().joined(separator: " ") : nil
+        return (model, components, String(name[open.upperBound..<close]))
+    }
 
     /// `com.apple.CoreSimulator.SimRuntime.iOS-26-1` → (`iOS`, [`26`, `1`])
     private static func parseRuntimeIdentifier(_ identifier: String) -> (platformName: String, version: [Substring])? {
@@ -219,6 +305,16 @@ enum SimulatorCleanup {
         guard let parsed = parseRuntimeIdentifier(identifier) else { return identifier }
         let name = DevicePlatform(name: parsed.platformName).name
         return parsed.version.isEmpty ? name : "\(name) \(parsed.version.joined(separator: "."))"
+    }
+
+    private static func isOlder(_ lhs: DeviceSupportFolder, than rhs: DeviceSupportFolder) -> Bool {
+        // pad with zeros, so that 16.4 and 16.4.0 are the same version and the build decides
+        let length = max(lhs.versionComponents.count, rhs.versionComponents.count)
+        let padded = { (components: [Int]) in components + Array(repeating: 0, count: length - components.count) }
+        let left = padded(lhs.versionComponents)
+        let right = padded(rhs.versionComponents)
+        if left != right { return left.lexicographicallyPrecedes(right) }
+        return lhs.build.compare(rhs.build, options: .numeric) == .orderedAscending
     }
 
     /// Allocated sizes from `du -sk`, 8 at a time. An item whose size cannot be measured is left out.
@@ -281,6 +377,7 @@ enum SimulatorCleanup {
 @MainActor
 final class SimulatorCleanupStore: ObservableObject {
     @Published private(set) var simulators: [SimulatorDevice] = []
+    @Published private(set) var deviceSupport: [DeviceSupportFolder] = []
     /// Installed runtime disk images by UUID (`CoreSimulatorImage.uuid`).
     @Published private(set) var runtimes: [String: InstalledRuntimeInfo] = [:]
     @Published private(set) var isLoading = false
@@ -296,6 +393,7 @@ final class SimulatorCleanupStore: ObservableObject {
     }
 
     var unavailableSimulators: [SimulatorDevice] { simulators.filter { !$0.isAvailable } }
+    var olderDeviceSupport: [DeviceSupportFolder] { deviceSupport.filter { !$0.isNewestForModel } }
 
     func simulators(forRuntimeIdentifier runtimeIdentifier: String) -> [SimulatorDevice] {
         simulators.filter { $0.runtimeIdentifier == runtimeIdentifier }
@@ -305,11 +403,21 @@ final class SimulatorCleanupStore: ObservableObject {
         simulators.first { $0.id == id }
     }
 
+    func deviceSupportFolder(withID id: URL?) -> DeviceSupportFolder? {
+        deviceSupport.first { $0.id == id }
+    }
+
     /// Available simulators by runtime, newest runtime first.
     var simulatorsByRuntime: [(runtime: String, simulators: [SimulatorDevice])] {
         Dictionary(grouping: simulators.filter(\.isAvailable), by: \.runtimeName)
             .map { ($0.key, $0.value.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }) }
             .sorted { $0.runtime.localizedStandardCompare($1.runtime) == .orderedDescending }
+    }
+
+    var deviceSupportByModel: [(model: String, folders: [DeviceSupportFolder])] {
+        Dictionary(grouping: deviceSupport, by: \.groupName)
+            .map { ($0.key, $0.value) }
+            .sorted { $0.model < $1.model }
     }
 
     func reload() async {
@@ -320,6 +428,7 @@ final class SimulatorCleanupStore: ObservableObject {
         }
         async let loadedSimulators = SimulatorCleanup.loadSimulators(using: service)
         async let loadedRuntimes = SimulatorCleanup.loadRuntimes(using: service)
+        async let loadedDeviceSupport = SimulatorCleanup.loadDeviceSupport(using: service)
         var failures: [String] = []
         do {
             simulators = try await loadedSimulators
@@ -328,6 +437,11 @@ final class SimulatorCleanupStore: ObservableObject {
         }
         do {
             runtimes = try await loadedRuntimes
+        } catch {
+            failures.append(error.localizedDescription)
+        }
+        do {
+            deviceSupport = try await loadedDeviceSupport
         } catch {
             failures.append(error.localizedDescription)
         }
@@ -347,6 +461,23 @@ final class SimulatorCleanupStore: ObservableObject {
                 failures.append("\(simulator.name): \(error.localizedDescription)")
             }
             deleting.remove(simulator.id)
+        }
+        if !failures.isEmpty {
+            failure = .delete(failures.joined(separator: "\n"))
+        }
+    }
+
+    func delete(deviceSupport toDelete: [DeviceSupportFolder]) async {
+        var failures: [String] = []
+        for folder in toDelete {
+            deleting.insert(folder.url.path)
+            do {
+                try SimulatorCleanup.delete(folder)
+                deviceSupport.removeAll { $0.id == folder.id }
+            } catch {
+                failures.append("\(folder.name): \(error.localizedDescription)")
+            }
+            deleting.remove(folder.url.path)
         }
         if !failures.isEmpty {
             failure = .delete(failures.joined(separator: "\n"))

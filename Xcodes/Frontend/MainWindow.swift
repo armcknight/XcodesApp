@@ -21,6 +21,7 @@ struct MainWindow: View {
     @StateObject private var cleanupStore = SimulatorCleanupStore()
     @State private var selectedRuntimeID: InstalledPlatformRuntime.ID?
     @State private var selectedSimulatorID: SimulatorDevice.ID?
+    @State private var selectedDeviceSupportID: DeviceSupportFolder.ID?
 
     var body: some View {
         NavigationSplitViewWrapper {
@@ -48,6 +49,8 @@ struct MainWindow: View {
                     PlatformsSidebarList(selection: $selectedRuntimeID, searchText: searchText)
                 case .simulators:
                     SimulatorsSidebarList(selection: $selectedSimulatorID, searchText: searchText)
+                case .deviceSupport:
+                    DeviceSupportSidebarList(selection: $selectedDeviceSupportID, searchText: searchText)
                 }
             }
             .layoutPriority(1)
@@ -71,6 +74,12 @@ struct MainWindow: View {
                 case .simulators:
                     if let simulator = cleanupStore.simulator(withID: selectedSimulatorID) {
                         SimulatorDetailView(simulator: simulator)
+                    } else {
+                        SidebarPlaceholder(mode: sidebarMode)
+                    }
+                case .deviceSupport:
+                    if let folder = cleanupStore.deviceSupportFolder(withID: selectedDeviceSupportID) {
+                        DeviceSupportDetailView(folder: folder)
                     } else {
                         SidebarPlaceholder(mode: sidebarMode)
                     }
