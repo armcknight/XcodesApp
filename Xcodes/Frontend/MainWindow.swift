@@ -55,17 +55,13 @@ struct MainWindow: View {
                     if let xcode = xcode {
                         InfoPane(xcode: xcode)
                     } else {
-                        UnselectedView()
+                        SidebarPlaceholder(mode: .xcodes)
                     }
                 case .platforms:
                     if let entry = InstalledPlatformRuntime.all(in: appState).first(where: { $0.id == selectedRuntimeID }) {
                         PlatformDetailView(entry: entry)
                     } else {
-                        ContentUnavailableView {
-                            Label { Text(verbatim: "No Platform Selected") } icon: { Image(symbol: .platforms) }
-                        } description: {
-                            Text(verbatim: "Select an installed simulator runtime to see its details.")
-                        }
+                        SidebarPlaceholder(mode: sidebarMode)
                     }
                 }
             }
