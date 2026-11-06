@@ -12,7 +12,7 @@ import XcodesKit
 // MARK: - Mode
 
 enum SidebarMode: String, CaseIterable, Identifiable {
-    case xcodes, platforms, simulators
+    case xcodes, platforms, simulators, deviceSupport
 
     var id: String { rawValue }
 
@@ -21,6 +21,7 @@ enum SidebarMode: String, CaseIterable, Identifiable {
         case .xcodes: return "Xcodes"
         case .platforms: return "Platforms"
         case .simulators: return "Simulators"
+        case .deviceSupport: return "Device Support"
         }
     }
 
@@ -29,6 +30,7 @@ enum SidebarMode: String, CaseIterable, Identifiable {
         case .xcodes: return .xcode
         case .platforms: return .platforms
         case .simulators: return .simulators
+        case .deviceSupport: return .deviceSupport
         }
     }
 }
@@ -89,10 +91,12 @@ struct SidebarModePicker: View {
 /// What a confirmation asks about.
 enum CleanupDeletion: Identifiable {
     case simulators([SimulatorDevice], context: String? = nil)
+    case deviceSupport([DeviceSupportFolder])
 
     var id: String {
         switch self {
         case let .simulators(items, _): return "s" + items.map(\.id).joined()
+        case let .deviceSupport(items): return "d" + items.map(\.url.path).joined()
         }
     }
 }
@@ -112,6 +116,11 @@ private struct CleanupConfirmation: ViewModifier {
                 title = items.count == 1 ? "Delete the simulator “\(items[0].name)”?" : "Delete \(items.count) simulators\(context.map { " \($0)" } ?? "")?"
                 message = "This frees \(total). The simulators and all their apps and data are deleted with `xcrun simctl delete`. You cannot undo this."
                 action = { Task { await store.delete(simulators: items) } }
+            case let .deviceSupport(items):
+                let total = formattedTotal(items.map(\.sizeBytes))
+                title = items.count == 1 ? "Delete device support for \(items[0].name)?" : "Delete \(items.count) device support folders?"
+                message = "This frees \(total). The folders are deleted at once, not moved to the Trash. Xcode copies a folder again when a device with that version connects."
+                action = { Task { await store.delete(deviceSupport: items) } }
             }
             return Alert(
                 title: Text(verbatim: title),
@@ -143,7 +152,7 @@ private struct CleanupFailureAlert: ViewModifier {
 
     private var title: String {
         switch store.failure {
-        case .load: return "Simulators could not be loaded"
+        case .load: return "Simulators and device support could not be loaded"
         case .delete: return "Some items could not be deleted"
         case nil: return ""
         }
@@ -224,6 +233,7 @@ private struct SidebarRow: View {
     let systemImage: SystemImage
     let size: Int64?
     var isDeleting = false
+    var highlightDetail = false
 
     var body: some View {
         HStack {
@@ -235,7 +245,7 @@ private struct SidebarRow: View {
                 if let detail {
                     Text(verbatim: detail)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(highlightDetail ? Color.accentColor : .secondary)
                         .lineLimit(1)
                 }
             }
@@ -319,6 +329,7 @@ struct SidebarPlaceholder: View {
         case .xcodes: Text("NoXcodeSelected")
         case .platforms: Text(verbatim: "No Platform Selected")
         case .simulators: Text(verbatim: "No Simulator Selected")
+        case .deviceSupport: Text(verbatim: "No Device Support Selected")
         }
     }
 
@@ -327,6 +338,7 @@ struct SidebarPlaceholder: View {
         case .xcodes: return "Select an Xcode version in the sidebar to see its details."
         case .platforms: return "Select an installed simulator runtime to see its size and simulators."
         case .simulators: return "Select a simulator to see its size, runtime and data folder."
+        case .deviceSupport: return "Select a device support folder to see its size and OS version."
         }
     }
 }
@@ -583,6 +595,95 @@ struct SimulatorDetailView: View {
                 } label: {
                     Text(verbatim: "Show in Finder")
                 }
+            }
+        }
+        .cleanupConfirmation($pending, store: store)
+    }
+}
+
+// MARK: - Device support
+
+struct DeviceSupportSidebarList: View {
+    @EnvironmentObject var store: SimulatorCleanupStore
+    @Binding var selection: DeviceSupportFolder.ID?
+    let searchText: String
+    @State private var pending: CleanupDeletion?
+
+    var body: some View {
+        List(selection: $selection) {
+            let older = store.olderDeviceSupport
+            if !older.isEmpty {
+                Section {
+                    Button {
+                        pending = .deviceSupport(older)
+                    } label: {
+                        Text(verbatim: "Delete \(older.count) older versions (\(formattedTotal(older.map(\.sizeBytes))))")
+                    }
+                    .buttonStyle(.link)
+                }
+            }
+
+            ForEach(store.deviceSupportByModel, id: \.model) { group in
+                let folders = group.folders.filter { matches("\(group.model) \($0.name)", searchText) }
+                if !folders.isEmpty {
+                    Section {
+                        ForEach(folders) { folder in
+                            SidebarRow(
+                                title: "\(folder.version) (\(folder.build))",
+                                detail: folder.isNewestForModel ? "Latest" : nil,
+                                systemImage: .folder,
+                                size: folder.sizeBytes,
+                                isDeleting: store.deleting.contains(folder.url.path),
+                                highlightDetail: folder.isNewestForModel
+                            )
+                            .tag(folder.id)
+                        }
+                    } header: {
+                        SidebarSectionHeader(title: group.model, detail: "\(folders.count) · \(formattedTotal(folders.map(\.sizeBytes)))")
+                    }
+                }
+            }
+        }
+        .listStyle(.sidebar)
+        .cleanupList(store: store)
+        .cleanupConfirmation($pending, store: store)
+    }
+}
+
+struct DeviceSupportDetailView: View {
+    @EnvironmentObject var store: SimulatorCleanupStore
+    let folder: DeviceSupportFolder
+    @State private var pending: CleanupDeletion?
+
+    var body: some View {
+        var facts = [("Platform", folder.platform.name)]
+        if let model = folder.model {
+            facts.append(("Device model", model))
+        }
+        facts += [
+            ("OS version", "\(folder.version) (\(folder.build))"),
+            ("Size", formattedSize(folder.sizeBytes)),
+            ("Folder", folder.url.path),
+        ]
+
+        return SidebarDetail(
+            title: "\(folder.model ?? folder.platform.name) \(folder.version)",
+            systemImage: .deviceSupport,
+            facts: facts,
+            note: folder.isNewestForModel
+                ? "This is the newest folder for this device. Xcode uses it to debug a device that runs this version."
+                : "A newer folder for this device is on disk. Xcode copies this one again if a device with this version connects."
+        ) {
+            Button(role: .destructive) {
+                pending = .deviceSupport([folder])
+            } label: {
+                Text(verbatim: "Delete Folder…")
+            }
+            .disabled(store.deleting.contains(folder.url.path))
+            Button {
+                NSWorkspace.shared.activateFileViewerSelecting([folder.url])
+            } label: {
+                Text(verbatim: "Show in Finder")
             }
         }
         .cleanupConfirmation($pending, store: store)
