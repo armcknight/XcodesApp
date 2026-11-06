@@ -13,8 +13,11 @@ import XcodesKit
 enum SystemImage: String {
     case xcode = "hammer"
     case platforms = "square.3.layers.3d"
+    case simulators = "iphone.gen3"
     case runtime = "cpu"
+    case reload = "arrow.clockwise"
     case iPhone = "iphone"
+    case iPad = "ipad"
     case watch = "applewatch"
     case tv = "appletv"
     case visionPro = "visionpro"

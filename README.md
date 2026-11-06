@@ -25,14 +25,19 @@ XcodesApp is now part of the `XcodesOrg` - [read more here](nextstep.md)
 - Security Key Authentication supported 
 - Support installing Platforms/Runtimes
 - See and delete installed Platforms/Runtimes in the sidebar
+- See and delete simulators in the sidebar, including simulators whose runtime is no longer installed
 - Support installing Apple Silicon variants
 
 ## Platforms/Runtimes
 
 - Xcodes supports downloading the Apple runtimes via the app. Simply click on the Platform, and Xcodes will install automatically for you.
-- The Platforms section of the sidebar (⌘2) lists the installed runtimes. Select one to delete it.
+- The Platforms section of the sidebar (⌘2) lists the installed runtimes with their size on disk. Select one to delete it.
 
 **Note: iOS 18+, tvOS 18+, watchOS 11+, visionOS 2+ requires that Xcode 16.1 Beta 3+ be installed and active.** 
+
+## Simulators
+
+The Simulators section of the sidebar (⌘3) lists your simulators by runtime, with the disk space each one uses. Simulators whose runtime is no longer installed are listed first, as "Unavailable", so you can delete them all at once. When you delete a runtime in the Platforms section, you can also delete its simulators.
 
 ## Apple Silicon Variants
 

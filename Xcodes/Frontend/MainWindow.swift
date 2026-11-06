@@ -18,7 +18,9 @@ struct MainWindow: View {
     @AppStorage("xcodeListArchitecture") private var architecture: XcodeListArchitecture = .defaultForCurrentMachine
     @AppStorage("isInstalledOnly") private var isInstalledOnly = false
     @AppStorage("sidebarMode") private var sidebarMode: SidebarMode = .xcodes
+    @StateObject private var cleanupStore = SimulatorCleanupStore()
     @State private var selectedRuntimeID: InstalledPlatformRuntime.ID?
+    @State private var selectedSimulatorID: SimulatorDevice.ID?
 
     var body: some View {
         NavigationSplitViewWrapper {
@@ -44,9 +46,12 @@ struct MainWindow: View {
                         )
                 case .platforms:
                     PlatformsSidebarList(selection: $selectedRuntimeID, searchText: searchText)
+                case .simulators:
+                    SimulatorsSidebarList(selection: $selectedSimulatorID, searchText: searchText)
                 }
             }
             .layoutPriority(1)
+            .environmentObject(cleanupStore)
             .searchable(text: $searchText, placement: .sidebar)
         } detail: {
             Group {
@@ -63,8 +68,15 @@ struct MainWindow: View {
                     } else {
                         SidebarPlaceholder(mode: sidebarMode)
                     }
+                case .simulators:
+                    if let simulator = cleanupStore.simulator(withID: selectedSimulatorID) {
+                        SimulatorDetailView(simulator: simulator)
+                    } else {
+                        SidebarPlaceholder(mode: sidebarMode)
+                    }
                 }
             }
+            .environmentObject(cleanupStore)
             .toolbar {
                 ToolbarItemGroup {
                     Button(action: { appState.presentedSheet = .signIn }, label: {
