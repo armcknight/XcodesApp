@@ -24,11 +24,13 @@ XcodesApp is now part of the `XcodesOrg` - [read more here](nextstep.md)
 - Dark/Light Mode supported
 - Security Key Authentication supported 
 - Support installing Platforms/Runtimes
+- See and delete installed Platforms/Runtimes in the sidebar
 - Support installing Apple Silicon variants
 
 ## Platforms/Runtimes
 
 - Xcodes supports downloading the Apple runtimes via the app. Simply click on the Platform, and Xcodes will install automatically for you.
+- The Platforms section of the sidebar (⌘2) lists the installed runtimes. Select one to delete it.
 
 **Note: iOS 18+, tvOS 18+, watchOS 11+, visionOS 2+ requires that Xcode 16.1 Beta 3+ be installed and active.** 
 

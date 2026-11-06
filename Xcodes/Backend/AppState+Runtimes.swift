@@ -284,38 +284,4 @@ extension AppState {
             throw XcodesKitError("No simulator found with \(runtime.identifier)")
         }
     }
-
-    func confirmDeleteRuntime(runtime: DownloadableRuntime) {
-        deleteRuntimeTask?.cancel()
-        let taskID = UUID()
-        deleteRuntimeTaskID = taskID
-        deleteRuntimeTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer {
-                if self.deleteRuntimeTaskID == taskID {
-                    self.deleteRuntimeTask = nil
-                    self.deleteRuntimeTaskID = nil
-                }
-            }
-
-            do {
-                try await self.deleteRuntime(runtime: runtime)
-            } catch is CancellationError {
-            } catch {
-                guard self.deleteRuntimeTaskID == taskID else { return }
-                self.presentedPreferenceAlert = .generic(
-                    title: "Error",
-                    message: self.runtimeDeletionErrorMessage(error)
-                )
-            }
-        }
-    }
-
-    private func runtimeDeletionErrorMessage(_ error: Error) -> String {
-        if let error = error as? XcodesKitError {
-            return error.message
-        }
-
-        return error.localizedDescription
-    }
 }

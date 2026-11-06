@@ -18,6 +18,7 @@
 		536CFDD2263C94DE00026CE0 /* SignedInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536CFDD1263C94DE00026CE0 /* SignedInView.swift */; };
 		536CFDD4263C9A8000026CE0 /* XcodesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 536CFDD3263C9A8000026CE0 /* XcodesSheet.swift */; };
 		53CBAB2C263DCC9100410495 /* XcodesAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53CBAB2B263DCC9100410495 /* XcodesAlert.swift */; };
+		5EB028C773F1C3957A2DCCAD /* SidebarSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6DC10AA31B1FA03A3EB521 /* SidebarSections.swift */; };
 		63EAA4EB259944450046AB8F /* ProgressButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EAA4EA259944450046AB8F /* ProgressButton.swift */; };
 		9DD4FFCB2B13EC1800C974F1 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 9DD4FFCA2B13EC1800C974F1 /* Localizable.xcstrings */; };
 		B0403CF02AD92D7B00137C09 /* ReleaseNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0403CEF2AD92D7B00137C09 /* ReleaseNotesView.swift */; };
@@ -108,8 +109,6 @@
 		E83FDC442CBB649100679C6B /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = E83FDC432CBB649100679C6B /* Sparkle */; };
 		E84B7D0D2B296A8900DBDA2B /* NavigationSplitViewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84B7D0C2B296A8900DBDA2B /* NavigationSplitViewWrapper.swift */; };
 		E84E4F522B323A5F003F3959 /* CornerRadiusModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E4F512B323A5F003F3959 /* CornerRadiusModifier.swift */; };
-		E84E4F542B333864003F3959 /* PlatformsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E4F532B333864003F3959 /* PlatformsListView.swift */; };
-		E84E4F572B335094003F3959 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = E84E4F562B335094003F3959 /* OrderedCollections */; };
 		E862D43B2CC8B26F00BAA376 /* SRP in Frameworks */ = {isa = PBXBuildFile; productRef = E862D43A2CC8B26F00BAA376 /* SRP */; };
 		E86671272B309D2F0048559A /* PlatformsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86671262B309D2F0048559A /* PlatformsView.swift */; };
 		E87AB3C52939B65E00D72F43 /* Hardware.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87AB3C42939B65E00D72F43 /* Hardware.swift */; };
@@ -190,6 +189,7 @@
 /* Begin PBXFileReference section */
 		1596C2903043765600178C86 /* FileOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperations.swift; sourceTree = "<group>"; };
 		15F5B88F2CCF09B900705E2F /* CryptoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CryptoKit.framework; path = System/Library/Frameworks/CryptoKit.framework; sourceTree = SDKROOT; };
+		1B6DC10AA31B1FA03A3EB521 /* SidebarSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSections.swift; sourceTree = "<group>"; };
 		3328073E2CA5E2C80036F691 /* SignInSecurityKeyPinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInSecurityKeyPinView.swift; sourceTree = "<group>"; };
 		332807402CA5EA820036F691 /* SignInSecurityKeyTouchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInSecurityKeyTouchView.swift; sourceTree = "<group>"; };
 		36741BFC291E4FDB00A85AAE /* DownloadPreferencePane.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloadPreferencePane.swift; sourceTree = "<group>"; };
@@ -306,7 +306,6 @@
 		E832EAF72B0FBCF4001B570D /* RuntimeInstallationStepDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeInstallationStepDetailView.swift; sourceTree = "<group>"; };
 		E84B7D0C2B296A8900DBDA2B /* NavigationSplitViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationSplitViewWrapper.swift; sourceTree = "<group>"; };
 		E84E4F512B323A5F003F3959 /* CornerRadiusModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CornerRadiusModifier.swift; sourceTree = "<group>"; };
-		E84E4F532B333864003F3959 /* PlatformsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformsListView.swift; sourceTree = "<group>"; };
 		E86671262B309D2F0048559A /* PlatformsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformsView.swift; sourceTree = "<group>"; };
 		E87AB3C42939B65E00D72F43 /* Hardware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hardware.swift; sourceTree = "<group>"; };
 		E87DD6EA25D053FA00D86808 /* Progress+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Progress+.swift"; sourceTree = "<group>"; };
@@ -348,7 +347,6 @@
 				E89CBD382D5FAB950037ED95 /* XcodesLoginKit in Frameworks */,
 				E8FD5727291EE4AC001E004C /* AsyncNetworkService in Frameworks */,
 				CABFA9EE2592F0CC00380FEE /* SwiftSoup in Frameworks */,
-				E84E4F572B335094003F3959 /* OrderedCollections in Frameworks */,
 				E8F44A1E296B4CD7002D6592 /* Path in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -469,6 +467,7 @@
 				CA44901E2463AD34003D8213 /* Tag.swift */,
 				CAE42486259A68A300B8B246 /* XcodeListCategory.swift */,
 				CAD2E7A32449574E00113D76 /* XcodeListView.swift */,
+				1B6DC10AA31B1FA03A3EB521 /* SidebarSections.swift */,
 				CAFFFED7259CDA5000903F81 /* XcodeListViewRow.swift */,
 				E8D0296E284B029800647641 /* BottomStatusBar.swift */,
 			);
@@ -619,7 +618,6 @@
 				E8977EA225C11E1500835F80 /* PreferencesView.swift */,
 				E8DA461025FAF7FB002E85EF /* NotificationsView.swift */,
 				E8CBDB8A27AE02FF00B22292 /* ExperiementsPreferencePane.swift */,
-				E84E4F532B333864003F3959 /* PlatformsListView.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -693,7 +691,6 @@
 				E689540225BE8C64000EBCEA /* DockProgress */,
 				E8FD5726291EE4AC001E004C /* AsyncNetworkService */,
 				E8F44A1D296B4CD7002D6592 /* Path */,
-				E84E4F562B335094003F3959 /* OrderedCollections */,
 				E83FDC432CBB649100679C6B /* Sparkle */,
 				E862D43A2CC8B26F00BAA376 /* SRP */,
 				E89CBD372D5FAB950037ED95 /* XcodesLoginKit */,
@@ -783,7 +780,6 @@
 				E8FD5725291EE4AC001E004C /* XCRemoteSwiftPackageReference "AsyncHTTPNetworkService" */,
 				E8F44A1C296B4CD7002D6592 /* XCRemoteSwiftPackageReference "Path" */,
 				E89CBD3B2D5FC0B10037ED95 /* XCRemoteSwiftPackageReference "XcodesLoginKit" */,
-				E84E4F552B335094003F3959 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				E83FDC422CBB649100679C6B /* XCRemoteSwiftPackageReference "Sparkle" */,
 				E899297E2FFDFA9A0019DB31 /* XCRemoteSwiftPackageReference "XcodesKit" */,
 			);
@@ -928,7 +924,7 @@
 				BDBAB7452B9FF55800694B0B /* TrailingIconLabelStyle.swift in Sources */,
 				E8D655C0288DD04700A139C2 /* SelectedActionType.swift in Sources */,
 				36741BFD291E4FDB00A85AAE /* DownloadPreferencePane.swift in Sources */,
-				E84E4F542B333864003F3959 /* PlatformsListView.swift in Sources */,
+				5EB028C773F1C3957A2DCCAD /* SidebarSections.swift in Sources */,
 				E86671272B309D2F0048559A /* PlatformsView.swift in Sources */,
 				CA9FF8522595080100E47BAF /* AcknowledgementsView.swift in Sources */,
 				CAFBDB912598FE80003DCC5A /* SelectedXcode.swift in Sources */,
@@ -1518,14 +1514,6 @@
 				minimumVersion = 2.6.4;
 			};
 		};
-		E84E4F552B335094003F3959 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-collections.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.5;
-			};
-		};
 		E899297E2FFDFA9A0019DB31 /* XCRemoteSwiftPackageReference "XcodesKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/XcodesOrg/XcodesKit";
@@ -1590,11 +1578,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E83FDC422CBB649100679C6B /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
-		};
-		E84E4F562B335094003F3959 /* OrderedCollections */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E84E4F552B335094003F3959 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = OrderedCollections;
 		};
 		E862D43A2CC8B26F00BAA376 /* SRP */ = {
 			isa = XCSwiftPackageProductDependency;

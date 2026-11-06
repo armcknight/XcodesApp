@@ -17,30 +17,56 @@ struct MainWindow: View {
     @AppStorage("xcodeListCategory") private var category: XcodeListCategory = .all
     @AppStorage("xcodeListArchitecture") private var architecture: XcodeListArchitecture = .defaultForCurrentMachine
     @AppStorage("isInstalledOnly") private var isInstalledOnly = false
+    @AppStorage("sidebarMode") private var sidebarMode: SidebarMode = .xcodes
+    @State private var selectedRuntimeID: InstalledPlatformRuntime.ID?
 
     var body: some View {
         NavigationSplitViewWrapper {
-            XcodeListView(selectedXcodeID: $selectedXcodeID, searchText: searchText, category: category, isInstalledOnly: isInstalledOnly, architecture: architecture)
-                .layoutPriority(1)
-                .alert(item: $appState.xcodeBeingConfirmedForUninstallation) { xcode in
-                    Alert(title: Text(String(format: localizeString("Alert.Uninstall.Title"), xcode.description)),
-                          message: Text("Alert.Uninstall.Message"),
-                          primaryButton: .destructive(Text("Uninstall"), action: { self.appState.uninstall(xcode: xcode) }),
-                          secondaryButton: .cancel(Text("Cancel")))
+            VStack(spacing: 0) {
+                SidebarModePicker(mode: $sidebarMode)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+
+                switch sidebarMode {
+                case .xcodes:
+                    XcodeListView(selectedXcodeID: $selectedXcodeID, searchText: searchText, category: category, isInstalledOnly: isInstalledOnly, architecture: architecture)
+                        .alert(item: $appState.xcodeBeingConfirmedForUninstallation) { xcode in
+                            Alert(title: Text(String(format: localizeString("Alert.Uninstall.Title"), xcode.description)),
+                                  message: Text("Alert.Uninstall.Message"),
+                                  primaryButton: .destructive(Text("Uninstall"), action: { self.appState.uninstall(xcode: xcode) }),
+                                  secondaryButton: .cancel(Text("Cancel")))
+                        }
+                        .mainToolbar(
+                            category: $category,
+                            isInstalledOnly: $isInstalledOnly,
+                            isShowingInfoPane: $isShowingInfoPane,
+                            architecture: $architecture
+                        )
+                case .platforms:
+                    PlatformsSidebarList(selection: $selectedRuntimeID, searchText: searchText)
                 }
-                .searchable(text: $searchText, placement: .sidebar)
-                .mainToolbar(
-                    category: $category,
-                    isInstalledOnly: $isInstalledOnly,
-                    isShowingInfoPane: $isShowingInfoPane,
-                    architecture: $architecture
-                )
+            }
+            .layoutPriority(1)
+            .searchable(text: $searchText, placement: .sidebar)
         } detail: {
             Group {
-                if let xcode = xcode {
-                    InfoPane(xcode: xcode)
-                } else {
-                    UnselectedView()
+                switch sidebarMode {
+                case .xcodes:
+                    if let xcode = xcode {
+                        InfoPane(xcode: xcode)
+                    } else {
+                        UnselectedView()
+                    }
+                case .platforms:
+                    if let entry = InstalledPlatformRuntime.all(in: appState).first(where: { $0.id == selectedRuntimeID }) {
+                        PlatformDetailView(entry: entry)
+                    } else {
+                        ContentUnavailableView {
+                            Label { Text(verbatim: "No Platform Selected") } icon: { Image(symbol: .platforms) }
+                        } description: {
+                            Text(verbatim: "Select an installed simulator runtime to see its details.")
+                        }
+                    }
                 }
             }
             .toolbar {
